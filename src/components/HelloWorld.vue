@@ -359,10 +359,11 @@ export default {
     },
     disableOrbitControls() {
       this.controls.enabled = false;
-      this.setSelectObject
+      this.setSelectObject();
     },
     enabledOrbitControls() {
       this.controls.enabled = true;
+      this.dragControls.enabled = false;
     },
     // 隐藏
     hideSelectObject() {
