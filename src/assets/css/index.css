@@ -1,0 +1,97 @@
+body {
+    padding: 0;
+    margin: 0;
+}
+
+/* loading */
+
+.load-bg {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: 0;
+    z-index: 999;
+    background: none;
+    background-color: #eee;
+}
+.load-tex {
+    width: 100%;
+    height: 100%;
+    color: #666;
+    display: table;
+}
+.load-logo {
+    text-align: center;
+    vertical-align: middle;
+    display: table-cell;
+}
+.load-logo h2 {
+    width: 50%;
+    margin: 0.5rem auto;
+    height: 0.5rem;
+    position: relative;
+    background-color: rgba(51, 51, 51, 0.2);
+    border-radius: 0.5rem;
+}
+.load-logo h2 .loading-bar {
+    height: 0.5rem;
+    position: absolute;
+    left: 0;
+    top: 0;
+    background-color: #666;
+    z-index: 1;
+    border-radius: 0.5rem;
+}
+
+/* right-buttons */
+
+.right-buttons {
+    position: relative;
+}
+.right-buttons ul {
+    text-align: center;
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 0;
+    margin: 0;
+    margin-right: 0.5rem;
+    margin-top: 0.5rem;
+}
+.right-buttons ul li {
+    position: relative;
+}
+.right-buttons ul li img {
+    width: 2.5rem;
+}
+.right-buttons ul li .line-content {
+    position: absolute;
+    top: 0;
+    height: 40px;
+    right: 3rem;
+}
+.right-buttons ul li .line-content input {
+    margin: 0;
+    margin-top: 10px;
+    line-height: 100%;
+}
+
+/* down buttons */
+
+.down-buttons ul {
+    text-align: center;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    padding: 0;
+    margin: 0;
+    margin-left: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+.down-buttons ul li {
+    float: right;
+}
+.down-buttons ul li img {
+    width: 3rem;
+}
