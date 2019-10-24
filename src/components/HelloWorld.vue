@@ -16,15 +16,15 @@
     <div class="right-buttons">
       <ul style="list-style: none;">
         <li>
-          <img src="../assets/img/btn-cf.png" alt="explode.icon">
+          <img src="../assets/img/btn-cf.png" alt="explode.icon" />
           <div class="line-content" style="display: block;">
-            <input type="range" min="0" max="100" value="0" class="slider" id="explodeRange">
+            <input type="range" min="0" max="100" value="0" class="slider" id="explodeRange" />
           </div>
         </li>
         <li>
-          <img src="../assets/img/btn-light.png" alt="light.icon">
+          <img src="../assets/img/btn-light.png" alt="light.icon" />
           <div class="line-content" style="display: block;">
-            <input type="range" min="0" max="100" value="0" class="slider" id="lightIndensity">
+            <input type="range" min="0" max="100" value="0" class="slider" id="lightIndensity" />
           </div>
         </li>
       </ul>
@@ -33,25 +33,28 @@
     <div class="down-buttons">
       <ul style="list-style: none;">
         <li class="clarity" @click="enableClarity" v-show="operating">
-          <img src="../assets/img/btn-clarity.png" alt="clarity.icon">
+          <img src="../assets/img/btn-clarity.png" alt="clarity.icon" />
         </li>
         <li class="notClarity" @click="enableNotClarity" v-show="operating">
-          <img src="../assets/img/btn-notClarity.png" alt="notClarity.icon">
+          <img src="../assets/img/btn-notClarity.png" alt="notClarity.icon" />
         </li>
         <li class="show" @click="showAllMesh" v-show="operating">
-          <img src="../assets/img/btn-show.png" alt="show.icon">
+          <img src="../assets/img/btn-show.png" alt="show.icon" />
         </li>
         <li class="showHide" @click="switchShowHide" v-show="operating">
-          <img src="../assets/img/btn-showHide.png" alt="showHide.icon">
+          <img src="../assets/img/btn-showHide.png" alt="showHide.icon" />
         </li>
         <li class="hide" @click="hideSelectObject" v-show="operating">
-          <img src="../assets/img/btn-hide.png" alt="hide.icon">
+          <img src="../assets/img/btn-hide.png" alt="hide.icon" />
+        </li>
+        <li class="reset" @click="resetSelectObject" v-show="operating">
+          <img src="../assets/img/btn-reset.png" alt="hide.icon" />
         </li>
         <li class="move" @click="enableDrag" v-show="operating">
-          <img src="../assets/img/btn-move.png" alt="move.icon">
+          <img src="../assets/img/btn-move.png" alt="move.icon" />
         </li>
         <li class="select" @click="enableOperating">
-          <img src="../assets/img/btn-handle.png" alt="select.icon">
+          <img src="../assets/img/btn-handle.png" alt="select.icon" />
         </li>
       </ul>
     </div>
@@ -81,7 +84,8 @@ export default {
       renderer: "",
       controls: "",
       dragControls: "",
-      clickObjects: [],
+      allMeshs: [],
+      allMeshsPosition: [],
       _curObj: "",
       operating: false
     };
@@ -97,7 +101,12 @@ export default {
     initTHREE() {
       this.scene = new THREE.Scene();
       // this.scene.position.set(0, -2, 0);
-      this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000);
+      this.camera = new THREE.PerspectiveCamera(
+        45,
+        window.innerWidth / window.innerHeight,
+        1,
+        10000
+      );
       this.camera.position.y = 200;
       this.camera.position.z = 1000;
       this.camera.lookAt(this.scene.position);
@@ -114,9 +123,14 @@ export default {
       this.controls.enableDamping = true;
       // controls.maxPolarAngle = Math.PI / 2;
 
-      this.dragControls = new DragControls(this.clickObjects, this.camera, renderCanvas);
+      this.dragControls = new DragControls(
+        this.allMeshs,
+        this.camera,
+        renderCanvas
+      );
       this.dragControls.enabled = false;
       this.dragControls.deactivate();
+      this.setDragControlsEventListener();
 
       window.addEventListener("resize", this.onWindowResize, false);
 
@@ -139,7 +153,12 @@ export default {
       var loader = new GLTFLoader();
       console.time("gltf load");
       // gltf
-      loader.load("../../static/example/gr200.gltf", that.onGLTF, that.onProgress, that.onError);
+      loader.load(
+        "../../static/example/gr200.gltf",
+        that.onGLTF,
+        that.onProgress,
+        that.onError
+      );
       // loader.load("../../static/obj/01.gltf", that.onGLTF, that.onProgress, that.onError);
       // draco gltf
       // loader.load("../../public/static/gltf/CesiumMan.gltf", that.onGLTF, that.onProgress, that.onError);
@@ -168,42 +187,42 @@ export default {
       // 模型的中心点坐标，爆炸中心
       var modelWorldPs = this.getModelCenter(gltf.scene);
 
+      var boundingBox = new THREE.Box3();
+      boundingBox.makeEmpty();
+      boundingBox.expandByObject(gltf.scene);
+
+      var center = boundingBox.getCenter(new THREE.Vector3());
+
       gltf.scene.traverse(function(value) {
         if (value.isMesh) {
           // 每个mesh的中心点
-          var worldPs = that.getMeshCenter(value);
+          var worldPs = that.getModelCenter(value);
           if (isNaN(worldPs.x)) return;
           // 爆炸方向
-          value.worldDir = new THREE.Vector3().subVectors(worldPs, modelWorldPs).normalize();
+          value.worldDir = new THREE.Vector3()
+            .subVectors(worldPs, modelWorldPs)
+            .normalize();
           // 保存初始坐标
           value.userData.oldPs = value.getWorldPosition(new THREE.Vector3());
-          // var box = new THREE.Box3().setFromObject(value);
-          // value.direct = box
-          //   .getCenter(new THREE.Vector3())
-          //   .sub(center)
-          //   .clone()
-          //   .multiplyScalar(0.01);
 
-          that.clickObjects.push(value);
+          var box = new THREE.Box3().setFromObject(value);
+          value.direct = box
+            .getCenter(new THREE.Vector3())
+            .sub(center)
+            .clone()
+            .normalize();
+
+          that.allMeshsPosition[value.name] = value.position.clone(true);
+          that.allMeshs.push(value);
         }
       });
-      // document.querySelector("#explodeRange").addEventListener("input", function(evt) {
-      //   var scalar = this.value * 10;
-      //   gltf.scene.traverse(function(value) {
-      //     if (!value.isMesh || !value.worldDir) return;
-      //     value.position.copy(new THREE.Vector3().copy(value.userData.oldPs).add(new THREE.Vector3().copy(value.worldDir).multiplyScalar(scalar)));
-      //   });
-      // });
     },
     getModelCenter(value) {
       var modelBox3 = new THREE.Box3();
       modelBox3.expandByObject(value);
-      return new THREE.Vector3().addVectors(modelBox3.max, modelBox3.min).multiplyScalar(0.5);
-    },
-    getMeshCenter(value) {
-      var meshBox3 = new THREE.Box3();
-      meshBox3.setFromObject(value);
-      return new THREE.Vector3().addVectors(meshBox3.max, meshBox3.min).multiplyScalar(0.5);
+      return new THREE.Vector3()
+        .addVectors(modelBox3.max, modelBox3.min)
+        .multiplyScalar(0.5);
     },
     animate() {
       var that = this;
@@ -224,42 +243,50 @@ export default {
     // 亮度
     enableLightInput() {
       var that = this;
-      document.querySelector("#lightIndensity").addEventListener("input", function(evt) {
-        that.camera.children[0].power = (1 + this.value * 0.01) * 4 * Math.PI;
-      });
+      document
+        .querySelector("#lightIndensity")
+        .addEventListener("input", function(evt) {
+          that.camera.children[0].power = (1 + this.value * 0.01) * 4 * Math.PI;
+        });
     },
     // 拆分
     enableExplode() {
       var that = this;
-      document.querySelector("#explodeRange").addEventListener("input", function(evt) {
-        var scalar = this.value * 10;
-        console.log(scalar);
-        that.clickObjects.forEach(function(value) {
-          if (!value.isMesh || !value.worldDir) return;
-          // var worldPos = value.getWorldPosition(new THREE.Vector3());
-          // worldPos.add(value.direct.clone().multiplyScalar(scalar));
-          // var localPos = value.parent.worldToLocal(worldPos);
-          // value.position.copy(localPos);
-          value.position.copy(new THREE.Vector3().copy(value.userData.oldPs).add(new THREE.Vector3().copy(value.worldDir).multiplyScalar(scalar)));
+      document
+        .querySelector("#explodeRange")
+        .addEventListener("input", function(evt) {
+          that.split(this.value);
         });
+    },
+    split(orientation) {
+      this.allMeshs.forEach(function(m) {
+        var worldPos = m.getWorldPosition(new THREE.Vector3());
+        worldPos.add(m.direct.clone().multiplyScalar(orientation));
+        var localPos = m.worldToLocal(worldPos);
+        m.position.copy(localPos);
       });
     },
     // 操作
     enableOperating() {
       if (this.operating) {
-        document.getElementById("WebGL-output").removeEventListener("mousedown", this.onDocumentClick, false);
+        document
+          .getElementById("WebGL-output")
+          .removeEventListener("mousedown", this.onDocumentClick, false);
         this.showAllMesh();
         this.cancelSelectObject();
+        this.diaplasisAll();
         this.operating = false;
       } else {
         this.operating = true;
-        document.getElementById("WebGL-output").addEventListener("mousedown", this.onDocumentClick, false);
+        document
+          .getElementById("WebGL-output")
+          .addEventListener("mousedown", this.onDocumentClick, false);
       }
     },
     onDocumentClick(event) {
       event.preventDefault();
       var obj = this.clickSingleObject(event);
-      if (obj) {
+      if (!!obj) {
         this.setSelectObject(obj);
       } else {
         this.cancelSelectObject();
@@ -275,13 +302,13 @@ export default {
       mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
       mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
       raycaster.setFromCamera(mouse, this.camera);
-      var intersects = raycaster.intersectObjects(this.clickObjects, true);
-      if (intersects.length == 0) return;
+      var intersects = raycaster.intersectObjects(this.allMeshs, true);
+      if (intersects.length == 0) return null;
       var objectTemp = intersects[0].object;
       objectTemp.faceIndex = intersects[0].faceIndex;
       return objectTemp;
     },
-    // 设置选中状态
+    //
     setSelectObject(object) {
       if (object.isMesh) {
         if (this._curObj && this._curObj !== object) {
@@ -289,9 +316,8 @@ export default {
         }
 
         this._curObj = object;
-        if (!this._curObj.originalMaterial) {
-          this._curObj.originalMaterial = this._curObj.material.clone(true);
-        }
+        this._curObj.originalMaterial ||
+          (this._curObj.originalMaterial = this._curObj.material.clone(true));
 
         this._curObj.material.color.set(0xff0000);
       }
@@ -340,6 +366,16 @@ export default {
         this._curObj = null;
       }
     },
+    setDragControlsEventListener() {
+      var that = this;
+      this.dragControls.addEventListener("dragstart", function(event) {
+        that.controls.enabled = false;
+        that.setSelectObject(event.object);
+      });
+      this.dragControls.addEventListener("dragend", function() {
+        that.controls.enabled = true;
+      });
+    },
     // 移动
     enableDrag() {
       if (this.operating) {
@@ -352,10 +388,22 @@ export default {
         this.controls.enabled = true;
       }
     },
-    setDragControlsEventListener() {
-      var that = this;
-      this.dragControls.addEventListener("dragstart", this.disableOrbitControls());
-      this.dragControls.addEventListener("dragend", this.enabledOrbitControls());
+    // 复位选中对象
+    resetSelectObject() {
+      this._curObj &&
+        this._curObj.position.copy(this.allMeshsPosition[this._curObj.name]);
+      this.cancelSelectObject();
+    },
+    // 复位所有对象
+    diaplasisAll() {
+      var mesh;
+      for (var i = 0; i < this.allMeshs.length; i++) {
+        mesh = this.allMeshs[i];
+        mesh.position.copy(this.allMeshsPosition[mesh.name]);
+        if (!!mesh.originalMaterial) {
+          mesh.material = mesh.originalMaterial;
+        }
+      }
     },
     disableOrbitControls() {
       this.controls.enabled = false;
@@ -376,13 +424,13 @@ export default {
     },
     // 显隐互换
     switchShowHide() {
-      this.clickObjects.forEach(function(mesh) {
+      this.allMeshs.forEach(function(mesh) {
         mesh.visible = !mesh.visible;
       });
     },
     // 全显
     showAllMesh() {
-      this.clickObjects.forEach(function(mesh) {
+      this.allMeshs.forEach(function(mesh) {
         mesh.visible = true;
         if (mesh.originalMaterial) {
           mesh.material = mesh.originalMaterial;
