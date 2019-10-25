@@ -87,7 +87,8 @@ export default {
       allMeshs: [],
       allMeshsPosition: [],
       _curObj: "",
-      operating: false
+      operating: false,
+      dragStatus: true
     };
   },
   created() {},
@@ -260,8 +261,9 @@ export default {
     },
     split(orientation) {
       this.allMeshs.forEach(function(m) {
+        // mesh center
         var worldPos = m.getWorldPosition(new THREE.Vector3());
-        worldPos.add(m.direct.clone().multiplyScalar(orientation));
+        worldPos.add(m.worldDir.clone().multiplyScalar(orientation));
         var localPos = m.worldToLocal(worldPos);
         m.position.copy(localPos);
       });
@@ -366,23 +368,28 @@ export default {
         this._curObj = null;
       }
     },
+    // 拖拽监听
     setDragControlsEventListener() {
       var that = this;
       this.dragControls.addEventListener("dragstart", function(event) {
         that.controls.enabled = false;
         that.setSelectObject(event.object);
+        console.log(event.object);
       });
       this.dragControls.addEventListener("dragend", function() {
         that.controls.enabled = true;
+        that._curObj.userData.oldPs = that._curObj.getWorldPosition(
+          new THREE.Vector3()
+        );
       });
     },
     // 移动
     enableDrag() {
-      if (this.operating) {
-        this.controls.enabled = false;
-        this.dragControls.enabled = true;
-        this.dragControls.activate();
-      } else {
+      this.dragStatus = !this.dragStatus;
+      this.controls.enabled = false;
+      this.dragControls.enabled = true;
+      this.dragControls.activate();
+      if (this.dragStatus) {
         this.dragControls.enabled = false;
         this.dragControls.deactivate();
         this.controls.enabled = true;
